@@ -1,0 +1,58 @@
+/* styles.css */
+
+/* Styling adjustments */
+body {
+	font-family: Arial, sans-serif;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	background-color: #f7f7f7;
+	padding: 0;
+}
+
+.magazine-viewport {
+	width: 100%;
+	max-width: 90%;
+	margin: auto;
+}
+
+.page {
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+	background-size: cover;
+}
+
+.sidenav {
+	width: 0;
+	height: 100%;
+	position: fixed;
+	top: 0;
+	right: 0;
+	background-color: #111;
+	overflow-x: hidden;
+	padding-top: 20px;
+	transition: 0.5s;
+}
+
+.list-group-item {
+	color: white;
+	background: none;
+	border: none;
+}
+
+.next-button,
+.previous-button {
+	position: absolute;
+	top: 50%;
+	width: 40px;
+	height: 40px;
+}
+
+.next-button {
+	right: -40px;
+	background-image: url('icons/next.png');
+}
+
+.previous-button {
+	left: -40px;
+	background-image: url('icons/prev.png');
+}
