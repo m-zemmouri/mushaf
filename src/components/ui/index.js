@@ -20,3 +20,11 @@ export const CardContent = ({ children, className = '' }) => <div className={`p-
 
 // src/components/ui/Input.jsx
 export const Input = ({ className = '', ...props }) => <input className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 ${className}`} {...props} />
+
+export const Select = ({ value, onChange, children, className }) => {
+	return (
+		<select value={value} onChange={onChange} className={`border rounded-md p-2 ${className}`}>
+			{children}
+		</select>
+	)
+}

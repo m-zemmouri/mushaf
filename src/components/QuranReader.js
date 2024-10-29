@@ -10,8 +10,10 @@ const QuranReader = () => {
 	const [isZoomed, setIsZoomed] = useState(false)
 	const [isSidenavOpen, setIsSidenavOpen] = useState(false)
 	const [searchInput, setSearchInput] = useState('')
+	const [pagesToDisplay, setPagesToDisplay] = useState(1)
+	const [bgColor, setBgColor] = useState('bg-white')
 
-	const { loading, error, pageUrl } = useQuranPage(currentPage)
+	const { loading, error } = useQuranPage(currentPage)
 
 	const goToPage = (pageNum) => {
 		if (pageNum >= 1 && pageNum <= QURAN_CONFIG.TOTAL_PAGES) {
@@ -55,9 +57,9 @@ const QuranReader = () => {
 			</header>
 
 			{/* Main Content */}
-			<main className='container mx-auto p-4 relative'>
+			<main className={`container mx-auto p-4 relative ${bgColor}`}>
 				<div className={`magazine-viewport ${isZoomed ? 'scale-125' : ''} transition-transform duration-300`}>
-					<div className='relative'>
+					<div className='relative flex'>
 						{loading ? (
 							<div className='w-full h-[600px] flex items-center justify-center bg-gray-100 rounded-lg'>
 								<Loader className='h-8 w-8 animate-spin text-emerald-700' />
@@ -65,20 +67,28 @@ const QuranReader = () => {
 						) : error ? (
 							<div className='w-full h-[600px] flex items-center justify-center bg-gray-100 rounded-lg text-red-500'>Failed to load page</div>
 						) : (
-							<img
-								src={pageUrl}
-								alt={`Page ${currentPage}`}
-								className='w-full rounded-lg shadow-lg'
-								style={{
-									aspectRatio: `${QURAN_CONFIG.PAGE_DIMENSIONS.width} / ${QURAN_CONFIG.PAGE_DIMENSIONS.height}`,
-									objectFit: 'contain',
-								}}
-							/>
+							<>
+								{Array.from({ length: pagesToDisplay }).map((_, index) => {
+									const pageNum = currentPage + index // Get the current page number for the display
+									return (
+										<img
+											key={index}
+											src={QURAN_CONFIG.getPagePath(pageNum)}
+											alt={`Page ${pageNum}`}
+											className='w-full rounded-lg shadow-lg'
+											style={{
+												aspectRatio: `${QURAN_CONFIG.PAGE_DIMENSIONS.width} / ${QURAN_CONFIG.PAGE_DIMENSIONS.height}`,
+												objectFit: 'contain',
+											}}
+										/>
+									)
+								})}
+							</>
 						)}
-						<Button variant='ghost' className='absolute left-4 top-1/2 -translate-y-1/2' onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1}>
+						<Button variant='ghost' className='absolute left-4 top-1/2 -translate-y-1/2' onClick={() => goToPage(currentPage - pagesToDisplay)} disabled={currentPage <= 1}>
 							<ChevronLeft className='h-8 w-8' />
 						</Button>
-						<Button variant='ghost' className='absolute right-4 top-1/2 -translate-y-1/2' onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= QURAN_CONFIG.TOTAL_PAGES}>
+						<Button variant='ghost' className='absolute right-4 top-1/2 -translate-y-1/2' onClick={() => goToPage(currentPage + pagesToDisplay)} disabled={currentPage + pagesToDisplay - 1 >= QURAN_CONFIG.TOTAL_PAGES}>
 							<ChevronRight className='h-8 w-8' />
 						</Button>
 					</div>
@@ -94,6 +104,29 @@ const QuranReader = () => {
 							✕
 						</Button>
 					</div>
+
+					<Card className='mb-4'>
+						<CardContent>
+							<h3 className='text-lg font-semibold mb-2'>اختيار لون الخلفية</h3>
+							<select value={bgColor} onChange={(e) => setBgColor(e.target.value)} className='border rounded-md p-2'>
+								<option value='bg-white'>أبيض</option>
+								<option value='bg-gray-200'>رمادي فاتح</option>
+								<option value='bg-blue-200'>أزرق فاتح</option>
+								<option value='bg-green-200'>أخضر فاتح</option>
+								{/* Add more color options as needed */}
+							</select>
+						</CardContent>
+					</Card>
+
+					<Card className='mb-4'>
+						<CardContent>
+							<h3 className='text-lg font-semibold mb-2'>عدد الصفحات المعروضة</h3>
+							<select value={pagesToDisplay} onChange={(e) => setPagesToDisplay(parseInt(e.target.value))} className='border rounded-md p-2'>
+								<option value={1}>صفحة واحدة</option>
+								<option value={2}>صفحتين</option>
+							</select>
+						</CardContent>
+					</Card>
 
 					<Card className='mb-4'>
 						<CardContent>
