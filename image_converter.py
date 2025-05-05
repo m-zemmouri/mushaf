@@ -1,4 +1,5 @@
 import os
+
 from PIL import Image
 
 # IMAGES PATH EXAMPLE: https://book-compass.com/wimages/144.webp
@@ -85,7 +86,7 @@ def make_background_transparent(
         print(f"Error: {e}")
 
 
-def crop_png_images(input_directory: str, output_directory: str, crop_box: tuple):
+def crop_images(input_directory: str, output_directory: str, crop_box: tuple):
     """
     Crop all PNG images in a directory to a specified rectangle.
 
@@ -107,6 +108,41 @@ def crop_png_images(input_directory: str, output_directory: str, crop_box: tuple
                 print(f"Cropped: {filename} -> {output_path}")
     except Exception as e:
         print(f"Error: {e}")
+
+
+def expand_images(input_directory: str, output_directory: str, target_size: tuple):
+    """
+    Expand each image to a fixed size with a black background, centering the image.
+
+    :param input_directory: Directory with source PNG images.
+    :param output_directory: Directory to save padded images.
+    :param target_size: Tuple (width, height) for the new canvas size.
+    """
+    ensure_output_dir(output_directory)
+    target_width, target_height = target_size
+
+    for filename in os.listdir(input_directory):
+        if filename.lower().endswith(".png"):
+            input_path = os.path.join(input_directory, filename)
+            output_path = os.path.join(output_directory, filename)
+
+            with Image.open(input_path) as img:
+                img = img.convert("RGBA")  # Ensure alpha channel
+                original_width, original_height = img.size
+
+                # Calculate top-left corner to paste the image centered
+                x = (target_width - original_width) // 2
+                y = (target_height - original_height) // 2
+
+                # Create a black background canvas
+                new_img = Image.new(
+                    "RGBA", (target_width, target_height), (255, 255, 255, 255)
+                )
+                new_img.paste(
+                    img, (x, y), mask=img
+                )  # Use mask for transparency support
+                new_img.save(output_path)
+                print(f"Centered on white canvas: {filename} -> {output_path}")
 
 
 def optimize_images(input_dir, output_dir, colors=64):
@@ -134,11 +170,17 @@ def optimize_images(input_dir, output_dir, colors=64):
 # --- Example Usage ---
 if __name__ == "__main__":
     input_directory = "./pages"  # Directory for webp images
+    output_directory = "./pages/PNG/1"
     # convert_webp_to_png(input_directory, "./pages/PNG/1")
 
     input_directory = "./pages/PNG/1"
+    output_directory = "./pages/PNG/2"
     # crop_box = (60, 60, 840, 1327)  # Crop coordinates (left, upper, right, lower)
-    # crop_png_images(input_directory, "./pages/PNG/2", crop_box)
+    # crop_images(input_directory, "./pages/PNG/2", crop_box)
+
+    input_directory = "./pages"
+    output_directory = "./pages/1"
+    expand_images(input_directory, output_directory, target_size=(800, 1280))
 
     input_directory = "./pages/PNG/2"
     output_directory = "./pages/PNG/3"
@@ -146,4 +188,4 @@ if __name__ == "__main__":
 
     input_directory = "./pages/older/Warsh Madina/Mobile App/"
     output_directory = "./pages/output/Warsh Madina/Mobile App/"
-    optimize_images(input_directory, output_directory, colors=64)
+    # optimize_images(input_directory, output_directory, colors=64)
