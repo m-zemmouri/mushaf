@@ -1,5 +1,5 @@
 import os
-
+from realesrgan import RealESRGAN
 from PIL import Image
 
 # IMAGES PATH EXAMPLE: https://book-compass.com/wimages/144.webp
@@ -145,6 +145,83 @@ def expand_images(input_directory: str, output_directory: str, target_size: tupl
                 print(f"Centered on white canvas: {filename} -> {output_path}")
 
 
+def resize_images(
+    input_directory: str,
+    output_directory: str,
+    new_size: tuple,
+    preserve_aspect_ratio: bool = False,
+    background_color=(255, 255, 255, 255),
+):
+    """
+    Resize PNG images to a fixed size, with optional aspect ratio preservation.
+
+    :param input_directory: Directory with input PNG images.
+    :param output_directory: Directory to save resized images.
+    :param new_size: Target size (width, height).
+    :param preserve_aspect_ratio: If True, maintains aspect ratio and pads with background color.
+    :param background_color: Background color for padding when preserving aspect ratio (default: white).
+    """
+    ensure_output_dir(output_directory)
+    target_w, target_h = new_size
+
+    for filename in os.listdir(input_directory):
+        if filename.lower().endswith(".png"):
+            input_path = os.path.join(input_directory, filename)
+            output_path = os.path.join(output_directory, filename)
+
+            with Image.open(input_path) as img:
+                img = img.convert("RGBA")
+                if preserve_aspect_ratio:
+                    # Resize with aspect ratio
+                    img.thumbnail((target_w, target_h), Image.Resampling.LANCZOS)
+
+                    # Center on canvas
+                    canvas = Image.new("RGBA", (target_w, target_h), background_color)
+                    offset_x = (target_w - img.width) // 2
+                    offset_y = (target_h - img.height) // 2
+                    canvas.paste(img, (offset_x, offset_y), mask=img)
+                    canvas.save(output_path)
+                else:
+                    # Strict resize
+                    resized = img.resize((target_w, target_h), Image.Resampling.LANCZOS)
+                    resized.save(output_path)
+
+                print(
+                    f"Resized ({'kept aspect' if preserve_aspect_ratio else 'strict'}): {filename} -> {output_path}"
+                )
+
+def upscale_image(
+    input_path: str,
+    output_path: str,
+    scale: int = 2,
+    weights_path: str = "weights/RealESRGAN_x2plus.pth",
+):
+    """
+    Upscale an image using Real-ESRGAN AI model.
+
+    :param input_path: Path to the input image.
+    :param output_path: Path to save the upscaled image.
+    :param scale: Magnification scale (2, 4, etc.). Should match weights used.
+    :param weights_path: Path to the pretrained weights file (.pth).
+    """
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
+    # Load model
+    model = RealESRGAN(device, scale=scale)
+    model.load_weights(weights_path)
+
+    # Load image
+    img = Image.open(input_path).convert("RGB")
+
+    # Enhance
+    sr_img = model.predict(img)
+
+    # Save result
+    sr_img.save(output_path)
+    print(f"Upscaled image saved to: {output_path}")
+
+
 def optimize_images(input_dir, output_dir, colors=64):
     """
     Optimize all PNG images in a directory by reducing the number of colors.
@@ -180,7 +257,11 @@ if __name__ == "__main__":
 
     input_directory = "./pages"
     output_directory = "./pages/1"
-    expand_images(input_directory, output_directory, target_size=(800, 1280))
+    # expand_images(input_directory, output_directory, target_size=(800, 1280))
+
+    input_directory = "./pages"
+    output_directory = "./pages/1"
+    resize_images(input_directory, output_directory, new_size=(1280, 2080))
 
     input_directory = "./pages/PNG/2"
     output_directory = "./pages/PNG/3"
